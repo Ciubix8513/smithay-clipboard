@@ -121,7 +121,7 @@ impl State {
             Data::Bytes { data: _, mime } => Some(*mime),
         }
         .map(|i| vec![ALLOWED_MIME_TYPES[i as usize]])
-        .unwrap_or(ALLOWED_MIME_TYPES.into());
+        .unwrap_or(MimeType::string_types().into());
 
         let contents = //Rc::from(contents.into_bytes());
         match contents {

@@ -44,6 +44,14 @@ impl MimeType {
 
         fallback
     }
+
+    pub fn string_types() -> [&'static str; 3] {
+        [
+            ALLOWED_MIME_TYPES[Self::TextPlainUtf8 as usize],
+            ALLOWED_MIME_TYPES[Self::Utf8String as usize],
+            ALLOWED_MIME_TYPES[Self::TextPlain as usize],
+        ]
+    }
 }
 
 impl std::fmt::Display for MimeType {
