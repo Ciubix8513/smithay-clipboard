@@ -316,6 +316,21 @@ impl KeyboardHandler for SimpleWindow {
                 self.clipboard.store(to_store);
                 println!("Copied string into clipboard: {}", to_store);
             },
+            Some("i") => {
+                let to_store = include_bytes!("./8bit_truecolor_alpha.png");
+                self.clipboard
+                    .store_data_with_mime(to_store.into(), smithay_clipboard::MimeType::ImagePng);
+                println!("Copied image into clipboard");
+            },
+
+            Some("I") => {
+                let to_store = include_bytes!("./8bit_truecolor_alpha.png");
+                self.clipboard.store_data_primary_with_mime(
+                    to_store.into(),
+                    smithay_clipboard::MimeType::ImagePng,
+                );
+                println!("Copied image into primary clipboard");
+            },
             _ => (),
         }
     }

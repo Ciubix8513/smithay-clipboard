@@ -38,6 +38,7 @@ use sctk::reexports::protocols::wp::primary_selection::zv1::client::{
 use wayland_backend::client::ObjectId;
 
 use crate::mime::{normalize_to_lf, MimeType, ALLOWED_MIME_TYPES};
+use crate::worker::Data;
 
 pub struct State {
     pub primary_selection_manager_state: Option<PrimarySelectionManagerState>,
@@ -107,7 +108,7 @@ impl State {
     /// Store selection for the given target.
     ///
     /// Selection source is only created when `Some(())` is returned.
-    pub fn store_selection(&mut self, ty: SelectionTarget, contents: String) -> Option<()> {
+    pub fn store_selection(&mut self, ty: SelectionTarget, contents: Data) -> Option<()> {
         let latest = self.latest_seat.as_ref()?;
         let seat = self.seats.get_mut(latest)?;
 
@@ -115,22 +116,31 @@ impl State {
             return None;
         }
 
-        let contents = Rc::from(contents.into_bytes());
+        let mime = match &contents {
+            Data::Text(_) => None,
+            Data::Bytes { data: _, mime } => Some(*mime),
+        }
+        .map(|i| vec![ALLOWED_MIME_TYPES[i as usize]])
+        .unwrap_or(ALLOWED_MIME_TYPES.into());
+
+        let contents = //Rc::from(contents.into_bytes());
+        match contents {
+            Data::Text(s) => Rc::from(s.into_bytes()),
+            Data::Bytes{ data, mime: _} => Rc::from_iter(data.into_iter()),
+        };
 
         match ty {
             SelectionTarget::Clipboard => {
                 let mgr = self.data_device_manager_state.as_ref()?;
                 self.data_selection_content = contents;
-                let source =
-                    mgr.create_copy_paste_source(&self.queue_handle, ALLOWED_MIME_TYPES.iter());
+                let source = mgr.create_copy_paste_source(&self.queue_handle, mime);
                 source.set_selection(seat.data_device.as_ref().unwrap(), seat.latest_serial);
                 self.data_sources.push(source);
             },
             SelectionTarget::Primary => {
                 let mgr = self.primary_selection_manager_state.as_ref()?;
                 self.primary_selection_content = contents;
-                let source =
-                    mgr.create_selection_source(&self.queue_handle, ALLOWED_MIME_TYPES.iter());
+                let source = mgr.create_selection_source(&self.queue_handle, mime);
                 source.set_selection(seat.primary_device.as_ref().unwrap(), seat.latest_serial);
                 self.primary_sources.push(source);
             },
@@ -222,6 +232,7 @@ impl State {
                                 normalize_to_lf(content)
                             },
                             MimeType::Utf8String => content,
+                            MimeType::ImagePng => todo!(),
                         };
 
                         let _ = state.reply_tx.send(Ok(content));

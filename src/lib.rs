@@ -16,6 +16,8 @@ mod mime;
 mod state;
 mod worker;
 
+pub use mime::MimeType;
+
 /// Access to a Wayland clipboard.
 pub struct Clipboard {
     request_sender: Sender<worker::Command>,
@@ -65,7 +67,12 @@ impl Clipboard {
     ///
     /// Stores to a clipboard on a last observed seat.
     pub fn store<T: Into<String>>(&self, text: T) {
-        let request = worker::Command::Store(text.into());
+        let request = worker::Command::Store(worker::Data::Text(text.into()));
+        let _ = self.request_sender.send(request);
+    }
+
+    pub fn store_data_with_mime(&self, data: Vec<u8>, mime: mime::MimeType) {
+        let request = worker::Command::Store(worker::Data::Bytes { data, mime });
         let _ = self.request_sender.send(request);
     }
 
@@ -88,7 +95,12 @@ impl Clipboard {
     ///
     /// Stores to a primary clipboard on a last observed seat.
     pub fn store_primary<T: Into<String>>(&self, text: T) {
-        let request = worker::Command::StorePrimary(text.into());
+        let request = worker::Command::StorePrimary(worker::Data::Text(text.into()));
+        let _ = self.request_sender.send(request);
+    }
+
+    pub fn store_data_primary_with_mime(&self, data: Vec<u8>, mime: mime::MimeType) {
+        let request = worker::Command::StorePrimary(worker::Data::Bytes { data, mime });
         let _ = self.request_sender.send(request);
     }
 }

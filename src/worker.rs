@@ -7,6 +7,7 @@ use sctk::reexports::calloop_wayland_source::WaylandSource;
 use sctk::reexports::client::globals::registry_queue_init;
 use sctk::reexports::client::Connection;
 
+use crate::mime::MimeType;
 use crate::state::{SelectionTarget, State};
 
 /// Spawn a clipboard worker, which dispatches its own `EventQueue` and handles
@@ -25,13 +26,19 @@ pub fn spawn(
         .ok()
 }
 
+#[derive(PartialEq, Eq)]
+pub enum Data {
+    Text(String),
+    Bytes { data: Vec<u8>, mime: MimeType },
+}
+
 /// Clipboard worker thread command.
 #[derive(Eq, PartialEq)]
 pub enum Command {
     /// Store data to a clipboard.
-    Store(String),
+    Store(Data),
     /// Store data to a primary selection.
-    StorePrimary(String),
+    StorePrimary(Data),
     /// Load data from a clipboard.
     Load,
     /// Load primary selection.
