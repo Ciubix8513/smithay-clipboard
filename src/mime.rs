@@ -1,6 +1,6 @@
 /// List of allowed mimes.
-pub static ALLOWED_MIME_TYPES: [&str; 3] =
-    ["text/plain;charset=utf-8", "UTF8_STRING", "text/plain"];
+pub static ALLOWED_MIME_TYPES: [&str; 4] =
+    ["text/plain;charset=utf-8", "UTF8_STRING", "text/plain", "image/png"];
 
 /// Mime type supported by clipboard.
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
@@ -18,6 +18,8 @@ pub enum MimeType {
     ///
     /// Fallback without charset parameter.
     TextPlain = 2,
+    ///image/png mime type.
+    ImagePng = 3,
 }
 
 impl MimeType {
@@ -35,6 +37,8 @@ impl MimeType {
             } else if offered_mime_type == ALLOWED_MIME_TYPES[Self::TextPlain as usize] {
                 // Only use this mime type as a fallback.
                 fallback = Some(Self::TextPlain);
+            } else if offered_mime_type == ALLOWED_MIME_TYPES[Self::ImagePng as usize] {
+                return Some(Self::ImagePng);
             }
         }
 
